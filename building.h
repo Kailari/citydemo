@@ -2,7 +2,11 @@
 #define DEMO001_BUILDING_H
 
 #include <GL/glew.h>
+#include <vector>
 #include "typedef.h"
+#include "buildingtemplate.h"
+#include "generator.h"
+#include "gridpos.h"
 
 const float g_gridSizeX = 10.0f;
 const float g_gridSizeZ = 10.0f;
@@ -19,47 +23,37 @@ const uint32 g_marginHeight = 4U;
 
 const uint32 g_bottomMargin = g_windowHeight + 2 * g_marginHeight;
 
-// pos:     3 float components
-// normal:  3 float components
-// uv:      2 float components
-struct Vertex {
-    float x, y, z;
-    float nx, ny, nz;
-    float u, v;
-};
-
-struct BuildingTemplate {
-    const unsigned int sizeX;
-    const unsigned int sizeZ;
-
-    const unsigned int nFloors;
-};
 
 class Building {
-    const Vertex* vertices;
-
-    const unsigned short* indices;
-    const unsigned short numVertices;
-
-    const unsigned short numIndices;
-
-    const GLuint texturePtr;
-
 public:
+    Building(const BuildingTemplate &properties, const AGenerator &generator);
 
-    const Vertex* getVertices() const;
-    const unsigned short* getIndices() const;
+    void createInstance(GridPos pos, bool useRandomTexture);
 
-    const unsigned short getNumVertices() const;
+    void refreshVertices();
 
-    const unsigned short getNumIndices() const;
+    void refreshTextures();
 
-    Building(const Vertex* vertices, unsigned short nVertices, const unsigned short* indices, unsigned short nIndices,
-             GLuint texturePtr);
+    void render();
 
-    ~Building();
 
-    GLuint getTexture();
+private:
+    struct Instance {
+        const GridPos pos;
+        const int32 textureIndex;
+    };
+
+    const BuildingTemplate properties;
+    const AGenerator generator;
+
+    const std::vector<Instance> instances;
+
+    std::vector<GLuint> textures;
+    Vertex* vertices;
+    uint16* indices;
+
+    uint16 nIndices;
+    uint16 nVertices;
 };
 
 

@@ -126,7 +126,7 @@ int main() {
     GeneratorSimple generator;
     BuildingTemplate buildingTemplate = {1, 1, 6};
 
-    Building* building = generator.generate(buildingTemplate);
+    Building* building = generator.generateVertices(buildingTemplate);
 
     GLuint vao;
     glGenVertexArrays(1, &vao);
@@ -195,7 +195,7 @@ int main() {
             glDeleteBuffers(1, &vbo);
             glDeleteVertexArrays(1, &vao);
             delete building;
-            building = generator.generate(buildingTemplate);
+            building = generator.generateVertices(buildingTemplate);
 
             glGenVertexArrays(1, &vao);
             glBindVertexArray(vao);

@@ -14,7 +14,7 @@ struct RGBAColor {
  */
 class GeneratorSimple : public AGenerator {
 public:
-    Building* generate(BuildingTemplate buildingTemplate) override;
+    Building* generateVertices(BuildingTemplate buildingTemplate) override;
 
     GLuint generateTexture(BuildingTemplate buildingTemplate) override;
 };

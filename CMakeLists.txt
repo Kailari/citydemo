@@ -7,7 +7,7 @@ configure_file("shaders/default.frag" "shaders/default.frag" COPYONLY)
 configure_file("shaders/default.vert" "shaders/default.vert" COPYONLY)
 
 
-set(SOURCE_FILES main.cpp building.cpp building.h generator_simple.h generator_simple.cpp generator.h typedef.h)
+set(SOURCE_FILES main.cpp building.cpp building.h generator_simple.h generator_simple.cpp generator.h typedef.h vertex.h buildingtemplate.h gridpos.h)
 add_executable(demo001 ${SOURCE_FILES})
 
 find_package(OpenGL REQUIRED)

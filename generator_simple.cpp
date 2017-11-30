@@ -5,11 +5,19 @@
 #include <GLFW/glfw3.h>
 #include "generator_simple.h"
 
-Building* GeneratorSimple::generate(BuildingTemplate buildingTemplate) {
+// TODO: Ditch interleaved vertices and use separate arrays in their own VBOs instead.
+//  -> due to way GeneratorSimple works, UVs and normals can be shared between VAOs
+//  -> OpenGL does not support using multiple IBOs for single render batch, so we'll
+//     still need to have 4 identical normals for each face :C
+
+// TODO: Change building generation pipeline so that multiple buildings can use same IBOs
+//  -> As long as all faces are quads, a single global IBO could be enough
+//  -> just change vertex count for every call and we are set
+
+Building* GeneratorSimple::generateVertices(BuildingTemplate buildingTemplate) {
     // 5 visible faces, 4 vertices per face
     // vertices ==> 5 face x 4 corners = 20
     auto* vertices = new Vertex[20];
-    auto* indices = new uint16[35];
 
     float x = 0.0f;
     float y = 0.0f;
@@ -18,11 +26,11 @@ Building* GeneratorSimple::generate(BuildingTemplate buildingTemplate) {
     float d = buildingTemplate.sizeZ * g_gridSizeZ;
     float h = buildingTemplate.nFloors * g_floorHeight;
 
-    unsigned short nV = 0;
-
-    unsigned short nI = 0;
-    unsigned short vI = 0;
-    for (unsigned short i = 0; i < 6; i++, vI += 4, nI += 6) {
+    auto* indices = new uint16[35];
+    uint16 nV = 0;
+    uint16 nI = 0;
+    uint16 vI = 0;
+    for (uint16 i = 0; i < 6; i++, vI += 4, nI += 6) {
         indices[nI + 0] = vI + 0;
         indices[nI + 1] = vI + 2;
         indices[nI + 2] = vI + 1;
@@ -30,8 +38,6 @@ Building* GeneratorSimple::generate(BuildingTemplate buildingTemplate) {
         indices[nI + 4] = vI + 0;
         indices[nI + 5] = vI + 3;
     }
-
-    // TODO: Interleave vertex data to avoid duplicates
 
     // XY, front
     float nx = 0;
@@ -90,8 +96,6 @@ Building* GeneratorSimple::generate(BuildingTemplate buildingTemplate) {
 }
 
 GLuint GeneratorSimple::generateTexture(BuildingTemplate buildingTemplate) {
-    // TODO: Generate textures per-face (Generate textures adjacent to a single texture and uv-map accordingly)
-
     // Calculate properties
     const int32 faceWidth = g_nWindowsPerFloor * (g_windowWidth + g_marginWidth) + g_marginWidth;
     const int32 texWidth = 2 * faceWidth;
