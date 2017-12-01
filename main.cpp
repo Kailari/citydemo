@@ -146,7 +146,7 @@ int main() {
     for (int32 x = 0; x < 50; x++) {
         for (int32 z = 0; z < 50; z++) {
             int32 randomNum = Util::randRange(100);
-            building.createInstance({x * 2, 0, z * 2}, randomNum > 25);
+            building.createInstance({x * 2, z * 2}, randomNum > 25);
         }
     }
 

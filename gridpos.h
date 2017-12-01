@@ -5,7 +5,7 @@
 #include "typedef.h"
 
 struct GridPos {
-    int32 x, y, z;
+    int32 x, z;
 };
 
 #endif //DEMO001_GRIDPOS_H
