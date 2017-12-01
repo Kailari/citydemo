@@ -17,6 +17,15 @@ Building::Building(const BuildingTemplate &properties, const AGenerator* generat
     refreshInstances();
 }
 
+Building::~Building() {
+    delete vertices;
+    delete indices;
+
+    for (GLuint texture : textures) {
+        glDeleteTextures(1, &texture);
+    }
+}
+
 void Building::createInstance(GridPos pos, bool useRandomTexture) {
     const bool generate = textures.empty() || useRandomTexture;
 
@@ -126,11 +135,19 @@ void Building::renderInstance(Instance instance, GLint modelMatrixUniformLocatio
     glDrawElements(GL_TRIANGLES, nIndices, GL_UNSIGNED_SHORT, (const void*) indices);
 }
 
-Building::~Building() {
-    delete vertices;
-    delete indices;
-
+void Building::clearInstances() {
     for (GLuint texture : textures) {
         glDeleteTextures(1, &texture);
     }
+
+    textures.clear();
+    instances.clear();
+}
+
+int32 Building::getSizeX() {
+    return properties.sizeX;
+}
+
+int32 Building::getSizeZ() {
+    return properties.sizeZ;
 }

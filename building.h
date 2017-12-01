@@ -57,6 +57,12 @@ public:
      */
     virtual void render(GLint modelMatrixUniformLocation);
 
+    void clearInstances();
+
+    int32 getSizeX();
+
+    int32 getSizeZ();
+
 protected:
     struct Instance {
         GridPos pos;

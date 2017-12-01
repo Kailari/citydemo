@@ -10,6 +10,7 @@
 #include "building.h"
 #include "generator_simple.h"
 #include "util.h"
+#include "buildinggrid.h"
 
 static std::string loadShaderCode(const char* filePath) {
     std::string code;
@@ -126,7 +127,7 @@ int main() {
     mat4x4 proj, view;
 
     // Build camera-matrix (store it temporarily to view)
-    vec3 eyePos = {25.0f, 25.0f, -15.0f};
+    vec3 eyePos = {25.0f, 100.0f, -35.0f};
     vec3 target = {45.0f, 0.0f, 35.0f};
     vec3 up = {0.0f, 1.0f, 0.0f};
     mat4x4_look_at(view, eyePos, target, up);
@@ -140,15 +141,15 @@ int main() {
     printf("Window/OpenGL initialized, generating buildings...\n");
 
     GeneratorSimple generator;
-    BuildingTemplate buildingTemplate = {1, 1, 6};
-    Building building(buildingTemplate, &generator);
-
-    for (int32 x = 0; x < 50; x++) {
-        for (int32 z = 0; z < 50; z++) {
-            int32 randomNum = Util::randRange(100);
-            building.createInstance({x * 2, z * 2}, randomNum > 25);
-        }
+    BuildingGrid grid;
+    std::vector<Building*> buildings;
+    for (int32 nFloors = 4; nFloors < 13; nFloors++) {
+        BuildingTemplate buildingTemplate = {1, 1, nFloors};
+        buildings.push_back(new Building(buildingTemplate, &generator));
+        grid.registerBuilding(buildings[buildings.size() - 1]);
     }
+
+    grid.refill();
 
 
     int width = -1;
@@ -174,17 +175,25 @@ int main() {
         }
 
         if (glfwGetKey(window, GLFW_KEY_SPACE)) {
-            building.refreshTextures();
+            for (Building* building : buildings) {
+                building->refreshTextures();
+            }
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUniformMatrix4fv(viewLocation, 1, GL_FALSE, (const GLfloat*) view);
 
-        building.render(modelLocation);
+        for (Building* building : buildings) {
+            building->render(modelLocation);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+    }
+
+    for (Building* building : buildings) {
+        delete building;
     }
 
     glDeleteProgram(program);
