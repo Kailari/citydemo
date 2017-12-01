@@ -5,8 +5,10 @@
 #include <vector>
 #include "typedef.h"
 #include "buildingtemplate.h"
-#include "generator.h"
 #include "gridpos.h"
+
+class AGenerator;
+struct Vertex;
 
 const float g_gridSizeX = 10.0f;
 const float g_gridSizeZ = 10.0f;
@@ -26,27 +28,51 @@ const uint32 g_bottomMargin = g_windowHeight + 2 * g_marginHeight;
 
 class Building {
 public:
-    Building(const BuildingTemplate &properties, const AGenerator &generator);
+    Building(const BuildingTemplate &properties, const AGenerator* generator);
 
+    virtual ~Building();
+
+    /**
+     * Creates a new instance of this building at given position.
+     * Does not verify that building can actually be fit there, so always remember
+     * checking that before creating instances.
+     *
+     * @param pos Position where to place the instance. Buildings larger than 1x1 extend towards positive XZ
+     * @param useRandomTexture If true, use texture from randomly selected existing instance. Generate new if false.
+     */
     void createInstance(GridPos pos, bool useRandomTexture);
 
-    void refreshVertices();
+    /**
+     * Re-generates all instances. Re-generates vertices and textures for every instance.
+     */
+    virtual void refreshInstances();
 
-    void refreshTextures();
+    /**
+     * Re-generates instances' textures
+     */
+    virtual void refreshTextures();
 
-    void render();
+    /**
+     * Renders all instances
+     */
+    virtual void render(GLint modelMatrixUniformLocation);
+
+protected:
+    struct Instance {
+        GridPos pos;
+        bool hasRandomTexture;
+        int32 textureIndex;
+    };
+
+    virtual void renderInstance(Instance instance, GLint modelMatrixUniformLocation);
 
 
 private:
-    struct Instance {
-        const GridPos pos;
-        const int32 textureIndex;
-    };
 
     const BuildingTemplate properties;
-    const AGenerator generator;
+    const AGenerator* generator;
 
-    const std::vector<Instance> instances;
+    std::vector<Instance> instances;
 
     std::vector<GLuint> textures;
     Vertex* vertices;
@@ -54,6 +80,10 @@ private:
 
     uint16 nIndices;
     uint16 nVertices;
+
+    GLuint vao, vbo;
+
+    bool bound;
 };
 
 

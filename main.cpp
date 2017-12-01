@@ -9,16 +9,7 @@
 #include "linmath.h"
 #include "building.h"
 #include "generator_simple.h"
-
-static const struct {
-    float x, y;
-    float r, g, b;
-} vertexData[3] = {
-        {-0.6f, -0.4f, 1.f, 0.f, 0.f},
-        {0.6f,  -0.4f, 0.f, 1.f, 0.f},
-        {0.f,   0.6f,  0.f, 0.f, 1.f}
-};
-
+#include "util.h"
 
 static std::string loadShaderCode(const char* filePath) {
     std::string code;
@@ -80,6 +71,9 @@ static GLuint compileShaderProgram() {
     glAttachShader(program, fragmentShader);
     glLinkProgram(program);
 
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
     glGetProgramiv(program, GL_LINK_STATUS, &result);
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLen);
     if (infoLogLen > 0) {
@@ -122,31 +116,6 @@ int main() {
         return -1;
     }
 
-
-    GeneratorSimple generator;
-    BuildingTemplate buildingTemplate = {1, 1, 6};
-
-    Building* building = generator.generateVertices(buildingTemplate);
-
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * building->getNumVertices(), building->getVertices(), GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) 0);
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) (sizeof(float) * 3));
-
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) (sizeof(float) * 6));
-
-
     GLuint program = compileShaderProgram();
     glUseProgram(program);
 
@@ -154,13 +123,11 @@ int main() {
     GLint viewLocation = glGetUniformLocation(program, "view");
     GLint modelLocation = glGetUniformLocation(program, "model");
 
-
-    mat4x4 proj;
-    mat4x4 view;
+    mat4x4 proj, view;
 
     // Build camera-matrix (store it temporarily to view)
-    vec3 eyePos = {0.0f, 25.0f, 0.0f};
-    vec3 target = {0.0f, 0.0f, 35.0f};
+    vec3 eyePos = {25.0f, 25.0f, -15.0f};
+    vec3 target = {45.0f, 0.0f, 35.0f};
     vec3 up = {0.0f, 1.0f, 0.0f};
     mat4x4_look_at(view, eyePos, target, up);
 
@@ -169,6 +136,21 @@ int main() {
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+
+    printf("Window/OpenGL initialized, generating buildings...\n");
+
+    GeneratorSimple generator;
+    BuildingTemplate buildingTemplate = {1, 1, 6};
+    Building building(buildingTemplate, &generator);
+
+    for (int32 x = 0; x < 50; x++) {
+        for (int32 z = 0; z < 50; z++) {
+            int32 randomNum = Util::randRange(100);
+            building.createInstance({x * 2, 0, z * 2}, randomNum > 25);
+        }
+    }
+
+
     int width = -1;
     int height = -1;
     bool running = true;
@@ -192,66 +174,20 @@ int main() {
         }
 
         if (glfwGetKey(window, GLFW_KEY_SPACE)) {
-            glDeleteBuffers(1, &vbo);
-            glDeleteVertexArrays(1, &vao);
-            delete building;
-            building = generator.generateVertices(buildingTemplate);
-
-            glGenVertexArrays(1, &vao);
-            glBindVertexArray(vao);
-
-            glGenBuffers(1, &vbo);
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * building->getNumVertices(), building->getVertices(),
-                         GL_STATIC_DRAW);
-
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) 0);
-
-            glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) (sizeof(float) * 3));
-
-            glEnableVertexAttribArray(2);
-            glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) (sizeof(float) * 6));
+            building.refreshTextures();
         }
-
-        // Create model matrix
-        mat4x4 model, offsetTrans, trans, scale, rot;
-        mat4x4_identity(model);
-
-        mat4x4_identity(scale);
-
-        mat4x4_identity(rot);
-        mat4x4_rotate_Y(rot, rot, (float) glfwGetTime());
-
-        mat4x4_translate(trans, target[0], target[1], target[2]);
-
-        mat4x4_translate(offsetTrans, -g_gridSizeX / 2.0f, 0.0f, -g_gridSizeZ / 2.0f);
-
-        mat4x4_mul(model, model, scale);
-        mat4x4_mul(model, model, trans);
-        mat4x4_mul(model, model, rot);
-        mat4x4_mul(model, model, offsetTrans);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(program);
-
         glUniformMatrix4fv(viewLocation, 1, GL_FALSE, (const GLfloat*) view);
-        glUniformMatrix4fv(modelLocation, 1, GL_FALSE, (const GLfloat*) model);
 
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-        glBindTexture(GL_TEXTURE_2D, building->getTexture());
-        glDrawElements(GL_TRIANGLES, building->getNumIndices(), GL_UNSIGNED_SHORT, (const void*) building->getIndices());
+        building.render(modelLocation);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
-    delete building;
+    glDeleteProgram(program);
 
     glfwDestroyWindow(window);
     glfwTerminate();

@@ -14,7 +14,7 @@
 //  -> As long as all faces are quads, a single global IBO could be enough
 //  -> just change vertex count for every call and we are set
 
-Building* GeneratorSimple::generateVertices(BuildingTemplate buildingTemplate) {
+GeneratedVertices GeneratorSimple::generateVertices(BuildingTemplate buildingTemplate) const {
     // 5 visible faces, 4 vertices per face
     // vertices ==> 5 face x 4 corners = 20
     auto* vertices = new Vertex[20];
@@ -92,14 +92,14 @@ Building* GeneratorSimple::generateVertices(BuildingTemplate buildingTemplate) {
     vertices[nV++] = {x + w, y + h, z + d, nx, ny, nz, 0.01, 0.01};
     vertices[nV++] = {x + 0, y + h, z + d, nx, ny, nz, 0, 0.01};
 
-    return new Building(vertices, nV, indices, nI, generateTexture(buildingTemplate));
+    return {vertices, nV, indices, nI};
 }
 
-GLuint GeneratorSimple::generateTexture(BuildingTemplate buildingTemplate) {
+GLuint GeneratorSimple::generateTexture(BuildingTemplate buildingTemplate) const {
     // Calculate properties
     const int32 faceWidth = g_nWindowsPerFloor * (g_windowWidth + g_marginWidth) + g_marginWidth;
     const int32 texWidth = 2 * faceWidth;
-    
+
     const int32 texHeight = (g_windowHeight + g_marginHeight) * buildingTemplate.nFloors + g_marginHeight + g_bottomMargin;
 
     // Warn if texture width is invalid
