@@ -126,7 +126,7 @@ int main() {
 
     mat4x4 proj, view;
 
-    // Build camera-matrix (store it temporarily to view)
+    // Build view-matrix
     vec3 eyePos = {25.0f, 100.0f, -35.0f};
     vec3 target = {45.0f, 0.0f, 35.0f};
     vec3 up = {0.0f, 1.0f, 0.0f};
@@ -174,11 +174,21 @@ int main() {
             glUniformMatrix4fv(projLocation, 1, GL_FALSE, (const GLfloat*) proj);
         }
 
-        if (glfwGetKey(window, GLFW_KEY_SPACE)) {
+        if (glfwGetKey(window, GLFW_KEY_TAB)) {
             for (Building* building : buildings) {
                 building->refreshTextures();
             }
         }
+
+
+        // Camera movement
+        const float cameraSpeed = 1.0f;
+        eyePos[0] += cameraSpeed * (glfwGetKey(window, GLFW_KEY_D) - glfwGetKey(window, GLFW_KEY_A)); // Strafe
+        eyePos[1] += cameraSpeed * (glfwGetKey(window, GLFW_KEY_SPACE) - glfwGetKey(window, GLFW_KEY_LEFT_CONTROL)); // Up/down
+        eyePos[2] += cameraSpeed * (glfwGetKey(window, GLFW_KEY_W) - glfwGetKey(window, GLFW_KEY_S)); // Forward
+
+        mat4x4_look_at(view, eyePos, target, up);
+
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

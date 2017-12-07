@@ -5,7 +5,7 @@
 bool BuildingGrid::isFree(int32 x, int32 z) {
     return x >= 0 && x < sizeX
            && z >= 0 && z < sizeZ
-           && grid[z][x] > -1;
+           && grid[z][x] < 0;
 }
 
 void BuildingGrid::refill() {
@@ -35,7 +35,7 @@ void BuildingGrid::add(int32 x, int32 z, int32 buildingIndex) {
 
     // Check that the building fits
     for (int32 xx = x; xx < x + building->getSizeX(); xx++) {
-        for (int32 zz = x; zz < z + building->getSizeZ(); zz++) {
+        for (int32 zz = z; zz < z + building->getSizeZ(); zz++) {
             if (!isFree(xx, zz)) {
                 return;
             }
@@ -44,7 +44,7 @@ void BuildingGrid::add(int32 x, int32 z, int32 buildingIndex) {
 
     // Fill the grid
     for (int32 xx = x; xx < x + building->getSizeX(); xx++) {
-        for (int32 zz = x; zz < z + building->getSizeZ(); zz++) {
+        for (int32 zz = z; zz < z + building->getSizeZ(); zz++) {
             grid[zz][xx] = buildingIndex;
         }
     }

@@ -8,8 +8,8 @@ class Building;
 
 class BuildingGrid {
 public:
-    static const int32 sizeX = 100;
-    static const int32 sizeZ = 100;
+    static const int32 sizeX = 10;
+    static const int32 sizeZ = 10;
 
     /**
      * Checks if given position on grid is free
